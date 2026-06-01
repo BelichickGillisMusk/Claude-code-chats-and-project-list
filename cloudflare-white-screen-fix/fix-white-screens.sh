@@ -94,6 +94,15 @@ resolve_project() {
     "" '
 }
 
+# Explicit override: set PROJECT_<REPO> (repo name upper-cased, non-alphanumerics
+# -> "_") to force a project name the API can't resolve. e.g.
+#   export PROJECT_GILLIS_HQ=gillis-hq
+override_project() {
+  local key
+  key="PROJECT_$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]' | sed 's/[^A-Z0-9]/_/g')"
+  printf '%s' "${!key:-}"
+}
+
 write_workflow() {
   local dir="$1" project="$2" build_out="$3"
   mkdir -p "$dir/.github/workflows"
@@ -125,9 +134,17 @@ YAML
 
 process_repo() {
   local repo="$1" subdir="${2:-.}" build_out="${3:-dist}"
-  local project; project="$(resolve_project "$repo")"
+  local project; project="$(override_project "$repo")"
+  [ -z "$project" ] && project="$(resolve_project "$repo")"
   if [ -z "$project" ]; then
-    warn "$repo: could not resolve an existing Pages project — set it manually before applying."
+    # Fail fast in apply mode: never commit/push a workflow with an unresolved
+    # project — that would deploy a broken CI config into the repo.
+    if [ "$APPLY" = "1" ]; then
+      err "$repo: SKIPPED — could not resolve an existing Pages project."
+      err "       Set PROJECT_$(printf '%s' "$repo" | tr '[:lower:]' '[:upper:]' | sed 's/[^A-Z0-9]/_/g')=<existing-project> and re-run, or check CLOUDFLARE_API_TOKEN."
+      return
+    fi
+    warn "$repo: could not resolve an existing Pages project (dry-run placeholder shown)."
     project="REPLACE_WITH_EXISTING_PROJECT_NAME"
   fi
   log "$repo (subdir=$subdir) -> Pages project '$project', deploy '$build_out'"

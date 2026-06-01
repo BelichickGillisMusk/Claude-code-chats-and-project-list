@@ -87,8 +87,19 @@ APPLY=1 ./fix-white-screens.sh
 
 `fix-white-screens.sh` resolves each repo to its **existing** Pages project via
 the Pages API (`wrangler pages project list` equivalent) so it never creates a
-duplicate. If it can't resolve one, it writes `REPLACE_WITH_EXISTING_PROJECT_NAME`
-and warns — set it by hand before `APPLY=1`.
+duplicate. If it can't resolve one:
+- in **dry-run** it shows `REPLACE_WITH_EXISTING_PROJECT_NAME` as a placeholder;
+- in **`APPLY=1`** it **skips that repo and fails fast** — it will not push a
+  workflow with an unresolved project (which would deploy a broken CI config).
+
+To force a mapping the API can't resolve, set `PROJECT_<REPO>` (repo name
+upper-cased, non-alphanumerics → `_`) and re-run, e.g.:
+
+```bash
+export PROJECT_GILLIS_HQ=gillis-hq
+export PROJECT_SILVERBACKAI_AGENCY=silverbackai-agency
+APPLY=1 ./fix-white-screens.sh
+```
 
 ### Native Git integration repos (alternative to the workflow)
 If a repo deploys via Cloudflare's **native Git integration** (not Actions),
