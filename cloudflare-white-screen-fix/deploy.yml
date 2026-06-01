@@ -1,0 +1,27 @@
+# Canonical Cloudflare Pages deploy workflow.
+# Copy this to .github/workflows/deploy.yml in each affected repo and
+# replace PROJECT_NAME with that repo's EXISTING Cloudflare Pages project
+# name (get the list with: `wrangler pages project list`). Do NOT invent a
+# new project name — that creates a duplicate Pages project.
+name: Deploy to Cloudflare Pages
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  deployments: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: bafa242dd95d3fdce72540d20accd0a2
+          command: pages deploy dist --project-name=PROJECT_NAME
