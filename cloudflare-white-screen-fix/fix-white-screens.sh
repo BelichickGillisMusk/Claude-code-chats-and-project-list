@@ -159,7 +159,7 @@ process_repo() {
     local app="$clone/$subdir"
     if [ ! -f "$app/package-lock.json" ]; then
       log "  no package-lock.json in $subdir — running npm install to generate one"
-      ( cd "$app" && npm install --package-lock-only >/dev/null 2>&1 || npm install >/dev/null 2>&1 )
+      ( cd "$app" && npm install --package-lock-only --ignore-scripts >/dev/null 2>&1 || npm install --ignore-scripts >/dev/null 2>&1 )
     fi
     write_workflow "$app" "$project" "$build_out"
     git add -A
