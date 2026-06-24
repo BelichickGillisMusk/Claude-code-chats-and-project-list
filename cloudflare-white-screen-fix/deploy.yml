@@ -20,6 +20,11 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm run build
+      - name: Disable worker-route wrangler.toml for Pages deploy
+        run: |
+          if [ -f wrangler.toml ] && grep -qE '^\[\[routes\]\]|^routes\s*=' wrangler.toml; then
+            mv wrangler.toml wrangler.toml.worker-routes-disabled
+          fi
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
