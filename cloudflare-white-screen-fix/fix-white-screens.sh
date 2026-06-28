@@ -31,6 +31,13 @@ set -euo pipefail
 ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-bafa242dd95d3fdce72540d20accd0a2}"
 ORG="BelichickGillisMusk"
 APPLY="${APPLY:-0}"
+
+# Verified Pages project names (wrangler pages project list, 2026-06-24).
+# Override any repo the API cannot resolve.
+export PROJECT_SILVERBACKAI_AGENCY="${PROJECT_SILVERBACKAI_AGENCY:-silverback-site}"
+export PROJECT_SILVERBACK_SITE_DEPLOY="${PROJECT_SILVERBACK_SITE_DEPLOY:-more-silverback}"
+export PROJECT_RENTBUBY_2="${PROJECT_RENTBUBY_2:-rent-ruby}"
+export PROJECT_GILLIS_HQ="${PROJECT_GILLIS_HQ:-gillisinstituteofai}"
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
@@ -124,6 +131,11 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm run build
+      - name: Disable worker-route wrangler.toml for Pages deploy
+        run: |
+          if [ -f wrangler.toml ] && grep -qE '^\\[\\[routes\\]\\]|^routes\\s*=' wrangler.toml; then
+            mv wrangler.toml wrangler.toml.worker-routes-disabled
+          fi
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
