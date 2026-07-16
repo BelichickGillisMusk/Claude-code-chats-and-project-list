@@ -118,13 +118,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
       - run: npm ci
       - run: npm run build
-      - uses: cloudflare/wrangler-action@v3
+      - uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${ACCOUNT_ID}
@@ -159,7 +159,7 @@ process_repo() {
     local app="$clone/$subdir"
     if [ ! -f "$app/package-lock.json" ]; then
       log "  no package-lock.json in $subdir — running npm install to generate one"
-      ( cd "$app" && npm install --package-lock-only >/dev/null 2>&1 || npm install >/dev/null 2>&1 )
+      ( cd "$app" && npm install --package-lock-only --ignore-scripts >/dev/null 2>&1 || npm install --ignore-scripts >/dev/null 2>&1 )
     fi
     write_workflow "$app" "$project" "$build_out"
     git add -A
